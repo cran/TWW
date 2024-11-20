@@ -22,12 +22,14 @@ List length should be between 3 and 5. See Details for more information.}
 \value{
 This function is designed to calculate the parameter estimates, standard errors, and p-values
         for the TWW Growth (Decay) Model as well as estimating \eqn{C_{TWW}}, inflection point (poi) coordinates,
-        sum of squares error (SSE), Akaike information criterion (AIC), and Bayesian information criterion (BIC).
+        sum of squares error (SSE), total sum of squares (SST), root mean square error (RMSE),
+        Akaike information criterion (AIC), and Bayesian information criterion (BIC).
 }
 \description{
-Calculates the 3-, 4-, and 5-parameter TWW Growth model estimates. For those who
-    use the cycle number and fluorescence intensity to analyze real-time, or quantitative polymerase
-    chain reaction (qPCR), this function will calculate the TWW cycle threshold (\eqn{C_{TWW}}).
+Calculates the 3-, 4-, and 5-parameter TWW (Tabatabai, Wilus, Wallace) Growth
+    model estimates. For those who use the cycle number and fluorescence intensity to analyze
+    real-time, or quantitative polymerase chain reaction (qPCR), this function will calculate
+    the TWW cycle threshold (\eqn{C_{TWW}}).
 }
 \details{
 The initialized parameters are inserted as a list in \code{start} and are passed to the \pkg{nls} function using the Gauss-Newton algorithm.
@@ -75,6 +77,11 @@ summary(tww(x = cycle_number, y = fluorescence, start = list(40,15.5,0.05,0,1),
             algorithm = "port",
             control = nls.control(maxiter = 250)))
 
+}
+\references{
+Tabatabai M, Wilus D, Singh K, Wallace T. The TWW Growth Model and
+Its Application in the Analysis of Quantitative Polymerase Chain Reaction.
+Bioinformatics and Biology Insights. 2024;18. doi:10.1177/11779322241290126
 }
 \seealso{
 \code{\link{nls}} to determine the nonlinear (weighted) least-squares estimates of the parameters of a nonlinear model.

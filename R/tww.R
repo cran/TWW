@@ -1,9 +1,10 @@
 #'
 #' TWW Growth Model
 #'
-#' @description Calculates the 3-, 4-, and 5-parameter TWW Growth model estimates. For those who
-#'     use the cycle number and fluorescence intensity to analyze real-time, or quantitative polymerase
-#'     chain reaction (qPCR), this function will calculate the TWW cycle threshold (\eqn{C_{TWW}}).
+#' @description Calculates the 3-, 4-, and 5-parameter TWW (Tabatabai, Wilus, Wallace) Growth
+#'     model estimates. For those who use the cycle number and fluorescence intensity to analyze
+#'     real-time, or quantitative polymerase chain reaction (qPCR), this function will calculate
+#'     the TWW cycle threshold (\eqn{C_{TWW}}).
 #' @usage tww(x, y, start = list(alpha,theta,beta,delta = NULL,phi = NULL), ...)
 #' @param x A numeric vector that must be same length as \code{y}
 #' @param y A numeric vector that must be same length as \code{x}
@@ -30,9 +31,13 @@
 #' \eqn{C_{TWW}} is only applicable to qPCR data and should not be considered in other cases.
 #' @return This function is designed to calculate the parameter estimates, standard errors, and p-values
 #'         for the TWW Growth (Decay) Model as well as estimating \eqn{C_{TWW}}, inflection point (poi) coordinates,
-#'         sum of squares error (SSE), Akaike information criterion (AIC), and Bayesian information criterion (BIC).
+#'         sum of squares error (SSE), total sum of squares (SST), root mean square error (RMSE),
+#'         Akaike information criterion (AIC), and Bayesian information criterion (BIC).
 #' @seealso
 #'   \code{\link{nls}} to determine the nonlinear (weighted) least-squares estimates of the parameters of a nonlinear model.
+#' @references Tabatabai M, Wilus D, Singh K, Wallace T. The TWW Growth Model and
+#' Its Application in the Analysis of Quantitative Polymerase Chain Reaction.
+#' Bioinformatics and Biology Insights. 2024;18. doi:10.1177/11779322241290126
 #' @examples
 #' #Data source: Guescini, M et al. BMC Bioinformatics (2008) Vol 9 Pg 326
 #' fluorescence <- c(-0.094311625, -0.022077977, -0.018940959, -0.013167045,
@@ -104,6 +109,7 @@ tww <- function(x, y, start = list(alpha,theta,beta,delta = NULL,phi = NULL), ..
          beta = par["beta","Estimate"]
          C_TWW <- (-sqrt(2*(3+sqrt(5)))+log((1+sqrt(5))/2)+2*log(theta))/(2*beta)
          SSE <- sum((y-f3(x,alpha,theta,beta))^2)
+         RMSE = sqrt(SSE/(length(x)-3))
          poi_x <- log(theta**2*(1+sqrt(5))/2)/(2*beta)
          poi_y <- alpha*exp(-asinh(sqrt(2)/sqrt(1+sqrt(5))))},
 
@@ -116,6 +122,7 @@ tww <- function(x, y, start = list(alpha,theta,beta,delta = NULL,phi = NULL), ..
          delta = par["delta","Estimate"]
          C_TWW <- (-sqrt((3+sqrt(5))/2)*(alpha+delta*exp(asinh(sqrt(2/(1+sqrt(5))))))+alpha*log((1+sqrt(5))*theta/2))/(alpha*beta)
          SSE <- sum((y-f4(x,alpha,theta,beta,delta))^2)
+         RMSE = sqrt(SSE/(length(x)-4))
          poi_x <- log(theta**2*(1+sqrt(5))/2)/(2*beta)
          poi_y <- alpha*exp(-asinh(sqrt(2))/sqrt(1+sqrt(5)))+delta},
 
@@ -131,20 +138,24 @@ tww <- function(x, y, start = list(alpha,theta,beta,delta = NULL,phi = NULL), ..
            (alpha+delta*exp(phi*asinh(sqrt(2)/sqrt(phi*(phi+sqrt(4+phi**2))))))+
            log(sqrt(phi*theta**2*(phi+sqrt(4+phi**2)))/sqrt(2))/beta
          SSE <- sum((y-f5(x,alpha,theta,beta,delta,phi))^2)
+         RMSE = sqrt(SSE/(length(x)-5))
          poi_x <- log(sqrt(phi**2*theta**2+phi*sqrt(4+phi**2)*theta**2)/sqrt(2))/beta
          poi_y <- alpha*exp(-phi*asinh(sqrt(2)/sqrt(phi*(phi+sqrt(4+phi**2)))))}
   )
 
   AIC <- length(x)*log(SSE/length(x)) + 2*length(start)
-
   BIC <- length(x)*log(SSE/length(x)) + log(length(x))*length(start)
+  SST <- sum((y-mean(y))^2)
 
   out <- structure(c(model, list(call = model$call, formula = formula, terms = rownames(par),
                                  coefficients = par),
                      "c_tww" = C_TWW,
+                     "sst" = SST,
                      "sse" = SSE,
                      "aic" = AIC,
-                     "bic" = BIC),
+                     "bic" = BIC,
+                     "rmse" = RMSE,
+                     "rsquare" = 1 - (SSE/SST)),
                    class = c("nls"))
   return(out)
 }
